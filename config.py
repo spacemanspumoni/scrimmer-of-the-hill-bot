@@ -5,7 +5,7 @@ Centralized location for all constants and settings.
 import re
 
 # Discord Bot Settings
-ROLE_NAME = "Scrimmer of the Hill"
+ROLE_NAME = "Scrimmer of The Hill"
 SCRIMMAGE_CHANNEL = "scrimmage-results"
 LEADERBOARD_CHANNEL = "scrimmer-of-the-hill"
 LEADERBOARD_HEADER = "🏆 Scrim Leaderboard"

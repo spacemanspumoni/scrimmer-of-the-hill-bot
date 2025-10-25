@@ -16,20 +16,13 @@ class KingManager:
     def __init__(self, leaderboard: LeaderboardData):
         self.leaderboard = leaderboard
     
-    async def get_or_create_role(self, guild: discord.Guild) -> Optional[discord.Role]:
-        """Get the king role, creating it if it doesn't exist."""
+    async def get_king_role(self, guild: discord.Guild) -> Optional[discord.Role]:
+        """Get the king role if it exists."""
         role = discord.utils.get(guild.roles, name=config.ROLE_NAME)
         
         if not role:
-            try:
-                role = await guild.create_role(
-                    name=config.ROLE_NAME,
-                    reason="Auto-created by Scrim Bot"
-                )
-                print(f'Created role: {config.ROLE_NAME}')
-            except discord.Forbidden:
-                print(f'Error: Bot lacks permission to create role "{config.ROLE_NAME}"')
-                return None
+            print(f'Error: Role "{config.ROLE_NAME}" not found in server')
+            return None
         
         return role
     
@@ -64,7 +57,7 @@ class KingManager:
             game: GameResult object with game details
             timestamp: When the game occurred
         """
-        role = await self.get_or_create_role(guild)
+        role = await self.get_king_role(guild)
         if not role:
             return
         
