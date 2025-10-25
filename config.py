@@ -9,6 +9,7 @@ ROLE_NAME = "Scrimmer of The Hill"
 SCRIMMAGE_CHANNEL = "scrimmage-results"
 LEADERBOARD_CHANNEL = "scrimmer-of-the-hill"
 LEADERBOARD_HEADER = "🏆 Scrim Leaderboard"
+STATE_MESSAGE_HEADER = "📊 Bot State"
 
 # Timing Settings
 KING_TIMEOUT_DAYS = 3

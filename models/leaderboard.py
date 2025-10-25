@@ -33,14 +33,6 @@ class LeaderboardData:
         if self.current_king_ego_floor is None or ego < self.current_king_ego_floor:
             self.current_king_ego_floor = ego
     
-    def update_ego(self, user_id: int, ego: int) -> None:
-        """
-        Deprecated: Legacy method kept for backward compatibility.
-        Use update_best_streak() and update_current_king_ego_floor() instead.
-        """
-        # This method is no longer used but kept for any legacy code
-        pass
-    
     def reset_king(self) -> None:
         """Reset king state (used on timeout or defeat)."""
         self.current_king_id = None
@@ -117,8 +109,8 @@ class LeaderboardData:
         
         return leaderboard
     
-    def to_message(self, guild: discord.Guild) -> str:
-        """Format leaderboard as a Discord message."""
+    def to_display_message(self, guild: discord.Guild) -> str:
+        """Format leaderboard as a Discord message (display only, no state)."""
         lines = [config.LEADERBOARD_HEADER, ""]
         
         # Show current king section
@@ -157,23 +149,22 @@ class LeaderboardData:
                 expiry_timestamp = int(expiry_time.timestamp())
                 lines.append(f"King expires: <t:{expiry_timestamp}:R>")
         
-        # Embed state data as JSON in a hidden format (spoiler tags)
-        lines.append("\n||```json")
-        lines.append(json.dumps(self.to_dict()))
-        lines.append("```||")
-        
         return "\n".join(lines)
     
+    def to_state_message(self) -> str:
+        """Format app state as a collapsible spoiler message."""
+        return f"{config.STATE_MESSAGE_HEADER}\n\n||```text\n{json.dumps(self.to_dict(), separators=(',', ':'))}\n```||"
+    
     @classmethod
-    def from_message(cls, content: str) -> Optional['LeaderboardData']:
-        """Extract leaderboard data from message content."""
+    def from_state_message(cls, content: str) -> Optional['LeaderboardData']:
+        """Extract leaderboard data from state message content."""
         import re
         try:
-            # Find JSON block
-            match = re.search(r'```json\n(.+?)\n```', content, re.DOTALL)
+            # Find JSON block in spoiler tags (text format)
+            match = re.search(r'\|\|```text\n(.+?)\n```\|\|', content, re.DOTALL)
             if match:
                 data = json.loads(match.group(1))
                 return cls.from_dict(data)
         except (json.JSONDecodeError, ValueError) as e:
-            print(f"Error parsing leaderboard message: {e}")
+            print(f"Error parsing state message: {e}")
         return None

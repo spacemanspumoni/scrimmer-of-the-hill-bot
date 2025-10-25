@@ -35,6 +35,7 @@ class ScrimBot(commands.Bot):
         
         # Discord objects
         self.leaderboard_message: Optional[discord.Message] = None
+        self.state_message: Optional[discord.Message] = None
         self.scrimmage_channel: Optional[discord.TextChannel] = None
         self.leaderboard_channel: Optional[discord.TextChannel] = None
     
@@ -77,31 +78,37 @@ class ScrimBot(commands.Bot):
         await self.king_manager.check_king_timeout(guild)
     
     async def recover_leaderboard_state(self, guild: discord.Guild):
-        """Recover leaderboard state from pinned message."""
+        """Recover leaderboard state from pinned state message."""
         if not self.leaderboard_channel:
             return
         
         try:
             pinned_messages = await self.leaderboard_channel.pins()
             
-            # Find our leaderboard message
+            # Find our messages
             for msg in pinned_messages:
-                if msg.author == self.user and msg.content.startswith(config.LEADERBOARD_HEADER):
-                    print(f'Found existing leaderboard message')
-                    self.leaderboard_message = msg
+                if msg.author == self.user:
+                    # Find leaderboard display message
+                    if msg.content.startswith(config.LEADERBOARD_HEADER):
+                        print(f'Found existing leaderboard message')
+                        self.leaderboard_message = msg
                     
-                    # Parse state from message
-                    recovered = LeaderboardData.from_message(msg.content)
-                    if recovered:
-                        self.leaderboard = recovered
-                        # Reinitialize services with recovered data
-                        self.king_manager = KingManager(self.leaderboard)
-                        self.message_processor = MessageProcessor(self.leaderboard, self.king_manager)
-                        print(f'Recovered leaderboard state: King={self.leaderboard.current_king_id}, Streak={self.leaderboard.current_streak}')
-                    break
+                    # Find state message and recover data from it
+                    elif msg.content.startswith(config.STATE_MESSAGE_HEADER):
+                        print(f'Found existing state message')
+                        self.state_message = msg
+                        
+                        # Parse state from message
+                        recovered = LeaderboardData.from_state_message(msg.content)
+                        if recovered:
+                            self.leaderboard = recovered
+                            # Reinitialize services with recovered data
+                            self.king_manager = KingManager(self.leaderboard)
+                            self.message_processor = MessageProcessor(self.leaderboard, self.king_manager)
+                            print(f'Recovered leaderboard state: King={self.leaderboard.current_king_id}, Streak={self.leaderboard.current_streak}')
             
-            if not self.leaderboard_message:
-                print('No existing leaderboard found, will create new one')
+            if not self.leaderboard_message or not self.state_message:
+                print('Missing leaderboard or state message, will create new ones')
         except discord.Forbidden:
             print('Error: Bot lacks permission to read pinned messages')
         except Exception as e:
@@ -183,27 +190,37 @@ class ScrimBot(commands.Bot):
         await self.update_leaderboard_message(message.guild)
     
     async def update_leaderboard_message(self, guild: discord.Guild):
-        """Update or create the leaderboard message."""
+        """Update or create the leaderboard display and state messages."""
         if not self.leaderboard_channel:
             print('Error: Leaderboard channel not found')
             return
         
-        message_content = self.leaderboard.to_message(guild)
+        display_content = self.leaderboard.to_display_message(guild)
+        state_content = self.leaderboard.to_state_message()
         
         try:
+            # Update or create leaderboard display message
             if self.leaderboard_message:
-                # Edit existing message
-                await self.leaderboard_message.edit(content=message_content)
+                await self.leaderboard_message.edit(content=display_content)
                 print('Updated leaderboard message')
             else:
-                # Create new message and pin it
-                self.leaderboard_message = await self.leaderboard_channel.send(message_content)
+                self.leaderboard_message = await self.leaderboard_channel.send(display_content)
                 await self.leaderboard_message.pin(reason="Scrim leaderboard")
                 print('Created and pinned new leaderboard message')
+            
+            # Update or create state message
+            if self.state_message:
+                await self.state_message.edit(content=state_content)
+                print('Updated state message')
+            else:
+                self.state_message = await self.leaderboard_channel.send(state_content)
+                await self.state_message.pin(reason="Bot state for recovery")
+                print('Created and pinned new state message')
+                
         except discord.Forbidden:
             print('Error: Bot lacks permission to edit/pin messages')
         except Exception as e:
-            print(f'Error updating leaderboard message: {e}')
+            print(f'Error updating leaderboard messages: {e}')
 
 
 def main():
