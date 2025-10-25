@@ -83,10 +83,8 @@ class ScrimBot(commands.Bot):
             return
         
         try:
-            pinned_messages = await self.leaderboard_channel.pins()
-            
             # Find our messages
-            for msg in pinned_messages:
+            async for msg in self.leaderboard_channel.pins():
                 if msg.author == self.user:
                     # Find leaderboard display message
                     if msg.content.startswith(config.LEADERBOARD_HEADER):
