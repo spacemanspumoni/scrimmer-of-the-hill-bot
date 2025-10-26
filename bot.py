@@ -119,6 +119,10 @@ class ScrimBot(commands.Bot):
     
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Handle message edits."""
+        # Only process if in scrimmage-results channel
+        if after.channel != self.scrimmage_channel:
+            return
+        
         # Only process if content actually changed
         if before.content != after.content:
             print(f'Message edited in #{after.channel.name}, reprocessing results')
