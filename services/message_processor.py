@@ -120,7 +120,7 @@ class MessageProcessor:
         timestamp_int = int(message.created_at.timestamp())
         result_key = self.create_result_key(message.id, game, timestamp_int)
         
-        # Check if this is a new result
+        # Check if this is a new result (not previously processed)
         is_new_result = not self.leaderboard.is_result_processed(result_key)
         
         if is_new_result:
@@ -128,11 +128,10 @@ class MessageProcessor:
         else:
             print(f'Reprocessing EXISTING result: Winner={game.winner_id} (ego {game.winner_ego})')
         
-        # Only update streaks and roles for new results
-        # Ego tracking is now handled inside king_manager based on game context
-        if is_new_result:
-            await self.king_manager.process_game_result(guild, game, message.created_at)
-            self.leaderboard.mark_result_processed(result_key, game.winner_id)
+        # During recalculation, always process results (even if previously seen)
+        # to rebuild state from scratch. Use the original message timestamp.
+        await self.king_manager.process_game_result(guild, game, message.created_at)
+        self.leaderboard.mark_result_processed(result_key, game.winner_id)
     
     async def recalculate_from_recent(
         self,
@@ -142,17 +141,17 @@ class MessageProcessor:
         """Recalculate all streaks and state from recent messages."""
         print(f'Starting recalculation from last {config.RECENT_MESSAGE_THRESHOLD} messages...')
         
-        # Store old king for role removal
+        # Store current king state for comparison
         old_king_id = self.leaderboard.current_king_id
+        old_streak = self.leaderboard.current_streak
+        old_ego_floor = self.leaderboard.current_king_ego_floor
         
-        # Reset current state (preserve best streaks - they never decrease)
-        self.leaderboard.reset_king()
+        # Clear tracking data but keep king state for now
         self.leaderboard.clear_tracking()
-        self.leaderboard.last_activity = None
         
-        # Remove king role from current king
-        if old_king_id:
-            await self.king_manager.remove_king_role(guild, reason="Recalculating due to result edit")
+        # Temporarily reset king state for recalculation
+        self.leaderboard.reset_king()
+        self.leaderboard.last_activity = None
         
         # Fetch and process messages in chronological order
         try:
@@ -171,7 +170,6 @@ class MessageProcessor:
             for msg in messages:
                 games = GameResult.parse_from_message(msg.content)
                 if games:
-                    timestamp = int(msg.created_at.timestamp())
                     for game in games:
                         await self.process_single_result(msg, game, guild)
                     
@@ -179,7 +177,28 @@ class MessageProcessor:
                     content_hash = self.calculate_content_hash(msg.content)
                     self.leaderboard.mark_message_processed(msg.id, content_hash)
             
-            print(f'Recalculation complete. New king: {self.leaderboard.current_king_id}, Streak: {self.leaderboard.current_streak}')
+            # Compare results
+            new_king_id = self.leaderboard.current_king_id
+            new_streak = self.leaderboard.current_streak
+            
+            # Check if king actually changed
+            if old_king_id == new_king_id and old_king_id is not None:
+                # Same king - check if we need to sync role
+                print(f'Recalculation confirmed: Same king ({new_king_id}), streak: {old_streak} -> {new_streak}')
+                role = await self.king_manager.get_king_role(guild)
+                if role:
+                    king = guild.get_member(new_king_id)
+                    if king and role not in king.roles:
+                        await king.add_roles(role, reason="Restoring king role after recalculation")
+            elif old_king_id != new_king_id:
+                # King changed - handle role transitions
+                if old_king_id:
+                    print(f'King changed during recalculation: {old_king_id} -> {new_king_id}')
+                    await self.king_manager.remove_king_role(guild, reason="King changed during recalculation")
+                else:
+                    print(f'New king after recalculation: {new_king_id}')
+            
+            print(f'Recalculation complete. King: {self.leaderboard.current_king_id}, Streak: {self.leaderboard.current_streak}')
         
         except discord.Forbidden:
             print('Error: Bot lacks permission to read message history')

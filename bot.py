@@ -126,6 +126,17 @@ class ScrimBot(commands.Bot):
         # Only process if content actually changed
         if before.content != after.content:
             print(f'Message edited in #{after.channel.name}, reprocessing results')
+            
+            # Remove old reactions if present
+            try:
+                await after.remove_reaction('✅', self.user)
+            except (discord.Forbidden, discord.NotFound, discord.HTTPException):
+                pass
+            try:
+                await after.remove_reaction('❌', self.user)
+            except (discord.Forbidden, discord.NotFound, discord.HTTPException):
+                pass
+            
             await self.handle_scrimmage_message(after)
     
     async def on_message_delete(self, message: discord.Message):
@@ -167,7 +178,22 @@ class ScrimBot(commands.Bot):
         # Parse game results
         games = GameResult.parse_from_message(message.content)
         if not games:
+            # Invalid format - add X reaction
+            try:
+                await message.add_reaction('❌')
+            except discord.Forbidden:
+                print('Error: Bot lacks permission to add reactions')
+            except Exception as e:
+                print(f'Error adding reaction: {e}')
             return
+        
+        # Valid format - add checkmark reaction
+        try:
+            await message.add_reaction('✅')
+        except discord.Forbidden:
+            print('Error: Bot lacks permission to add reactions')
+        except Exception as e:
+            print(f'Error adding reaction: {e}')
         
         # Check if any winner changed (needs recalculation)
         if self.message_processor.check_any_winners_changed(message, games):
