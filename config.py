@@ -19,8 +19,8 @@ RECENT_MESSAGE_THRESHOLD = 5  # Messages within this count are considered "recen
 LEADERBOARD_TOP_N = 10  # Number of players to show on leaderboard
 
 # Regex Pattern for parsing scrimmage results
-# Format: @Player1 Score1-Score2 @Player2 Ego (parentheses optional)
-# Example: @User1 5-3 @User2 90 or @User1 5-3 @User2 (80/90) or @User1 5-3 @User2 80/90
+# Format: @Player1 Score1-Score2 @Player2 (Ego)
+# Example: @User1 5-3 @User2 (90) or @User1 5-3 @User2 (80/90)
 RESULT_PATTERN = re.compile(
-    r'<@!?(\d+)>\s*(\d+)\s*-\s*(\d+)\s*<@!?(\d+)>\s*\(?\s*(\d+(?:\s*/\s*\d+)?)\s*\)?'
+    r'<@!?(\d+)>\s*(\d+)\s*-\s*(\d+)\s*<@!?(\d+)>\s*\(\s*(\d+(?:\s*/\s*\d+)?)\s*\)'
 )
