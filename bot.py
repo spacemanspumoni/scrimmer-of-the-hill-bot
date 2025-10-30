@@ -75,7 +75,10 @@ class ScrimBot(commands.Bot):
         await self.recover_leaderboard_state(guild)
         
         # Check if king has timed out
-        await self.king_manager.check_king_timeout(guild)
+        king_timed_out = await self.king_manager.check_king_timeout(guild)
+        if king_timed_out:
+            # Update leaderboard to show no current king
+            await self.update_leaderboard_message(guild)
     
     async def recover_leaderboard_state(self, guild: discord.Guild):
         """Recover leaderboard state from pinned state message."""
@@ -173,7 +176,10 @@ class ScrimBot(commands.Bot):
             return
         
         # Check if king has expired before processing new results
-        await self.king_manager.check_king_timeout(message.guild)
+        king_timed_out = await self.king_manager.check_king_timeout(message.guild)
+        if king_timed_out:
+            # Update leaderboard to show no current king
+            await self.update_leaderboard_message(message.guild)
         
         # Parse game results
         games = GameResult.parse_from_message(message.content)
