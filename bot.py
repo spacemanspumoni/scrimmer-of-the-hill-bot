@@ -138,6 +138,7 @@ class ScrimBot(commands.Bot):
             return
 
         # Only process if message starts with an @ mention to the configured role id
+        print(f'[super-mega-hackers] Bot user id: {self.user.id}')
         allowed_role_id = getattr(config, 'BOT_ROLE_ID', None)
         if not allowed_role_id:
             print(f"[super-mega-hackers] Skipping: config.BOT_ROLE_ID not set")
