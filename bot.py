@@ -141,13 +141,13 @@ class ScrimBot(commands.Bot):
         role_id = None
         # Try to get the role id from the channel's guild
         if message.guild:
-            role = discord.utils.get(message.guild.roles, name=config.ROLE_NAME)
+            role = discord.utils.get(message.guild.roles, name=config.BOT_ROLE_NAME)
             if role:
                 role_id = role.id
         if not role_id:
-            print(f"[super-mega-hackers] Skipping: could not find role '{config.ROLE_NAME}' in guild {getattr(message.guild, 'name', None)}")
+            print(f"[super-mega-hackers] Skipping: could not find role '{config.BOT_ROLE_NAME}' in guild {getattr(message.guild, 'name', None)}")
             return
-        print(f"[super-mega-hackers] Found role '{config.ROLE_NAME}' with id: {role_id}")
+        print(f"[super-mega-hackers] Found role '{config.BOT_ROLE_NAME}' with id: {role_id}")
         if not message.content.startswith(f"<@&{role_id}>"):
             print(f"[super-mega-hackers] Skipping: message does not start with @ role mention (content: {message.content[:50]})")
             return
