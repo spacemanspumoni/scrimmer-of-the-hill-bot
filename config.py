@@ -7,6 +7,7 @@ import re
 # Discord Bot Settings
 ROLE_NAME = "Scrimmer of The Hill"
 SCRIMMAGE_CHANNEL = "scrimmage-results"
+HACKERS_CHANNEL = "super-mega-hackers"
 LEADERBOARD_CHANNEL = "scrimmer-of-the-hill"
 LEADERBOARD_HEADER = "🏆 Scrim Leaderboard"
 STATE_MESSAGE_HEADER = "📊 Bot State"

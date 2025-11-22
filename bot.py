@@ -117,8 +117,51 @@ class ScrimBot(commands.Bot):
     
     async def on_message(self, message: discord.Message):
         """Handle new messages."""
+
         await self.handle_scrimmage_message(message)
+
+        await self.handle_super_mega_hackers_message(message)
+
         await self.process_commands(message)
+
+    async def handle_super_mega_hackers_message(self, message: discord.Message):
+        """Process messages in the super-mega-hackers channel from a specific user with JSON payloads."""
+        if message.channel != self.hackers_channel:
+            return
+
+        # Only process if from a specific super mega hacker
+        if str(message.author.id) != "369367182796390401":
+            return
+
+        # Only process if message starts with an @ mention to the bot
+        if not message.content.startswith(f"<@{self.user.id}>") and not message.content.startswith(f"<@!{self.user.id}>"):
+            return
+
+        # Extract JSON blob after the @ mention
+        import json
+        import re
+        # Remove the @ mention (could be <@id> or <@!id>)
+        content = re.sub(r"^<@!?" + str(self.user.id) + r">\s*", "", message.content)
+        try:
+            data = json.loads(content)
+        except Exception as e:
+            print(f"Error parsing JSON from super-mega-hackers message: {e}")
+            return
+
+        # Update leaderboard state from JSON
+        from models.leaderboard import LeaderboardData
+        recovered = LeaderboardData.from_dict(data)
+        if recovered:
+            # self.leaderboard = recovered
+            # Reinitialize services with recovered data
+            # self.king_manager = KingManager(self.leaderboard)
+            # self.message_processor = MessageProcessor(self.leaderboard, self.king_manager)
+            print(f"[super-mega-hackers] Updated leaderboard state from JSON: King={self.leaderboard.current_king_id}, Streak={self.leaderboard.current_streak}")
+            # Update leaderboard display
+            # if message.guild:
+                # await self.update_leaderboard_message(message.guild)
+        else:
+            print("[super-mega-hackers] Failed to update leaderboard from JSON")
     
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Handle message edits."""
