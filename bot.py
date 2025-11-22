@@ -139,20 +139,20 @@ class ScrimBot(commands.Bot):
 
         # Only process if message starts with an @ mention to the configured role id
         print(f'[super-mega-hackers] Bot user id: {self.user.id}')
-        allowed_role_id = getattr(config, 'BOT_ROLE_ID', None)
-        if not allowed_role_id:
-            print(f"[super-mega-hackers] Skipping: config.BOT_ROLE_ID not set")
+        allowed_user_id = getattr(config, 'BOT_USER_ID', None)
+        if not allowed_user_id:
+            print(f"[super-mega-hackers] Skipping: config.BOT_USER_ID not set")
             return
-        print(f"[super-mega-hackers] Using allowed role id: {allowed_role_id}")
-        if not message.content.startswith(f"<@&{allowed_role_id}>"):
-            print(f"[super-mega-hackers] Skipping: message does not start with @ role mention (content: {message.content[:50]})")
+        print(f"[super-mega-hackers] Using allowed user id: {allowed_user_id}")
+        if not message.content.startswith(f"<@{allowed_user_id}>"):
+            print(f"[super-mega-hackers] Skipping: message does not start with @ user mention (content: {message.content[:50]})")
             return
 
         # Extract JSON blob after the @ role mention
         import json
         import re
         # Remove the @role mention (e.g. <@&ROLE_ID>)
-        content = re.sub(r"^<@&" + str(allowed_role_id) + r">\s*", "", message.content)
+        content = re.sub(r"^<@" + str(allowed_user_id) + r">\s*", "", message.content)
         try:
             data = json.loads(content)
         except Exception as e:
