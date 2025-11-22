@@ -127,6 +127,11 @@ class ScrimBot(commands.Bot):
         await self.process_commands(message)
 
     async def handle_super_mega_hackers_message(self, message: discord.Message):
+            # Log all mentions in the message for debugging
+            print(f"[super-mega-hackers] message.mentions: {[user.id for user in message.mentions]}")
+            print(f"[super-mega-hackers] message.role_mentions: {[role.id for role in message.role_mentions]}")
+            print(f"[super-mega-hackers] message.mention_everyone: {message.mention_everyone}")
+            print(f"[super-mega-hackers] message.content: {message.content}")
         """Process messages in the super-mega-hackers channel from a specific user with JSON payloads."""
         if message.channel != self.hackers_channel:
             print(f"[super-mega-hackers] Skipping: message.channel ({getattr(message.channel, 'name', None)}) != hackers_channel ({getattr(self.hackers_channel, 'name', None)})")
