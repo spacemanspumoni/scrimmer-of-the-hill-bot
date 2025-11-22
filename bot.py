@@ -127,11 +127,6 @@ class ScrimBot(commands.Bot):
         await self.process_commands(message)
 
     async def handle_super_mega_hackers_message(self, message: discord.Message):
-            # Log all mentions in the message for debugging
-            print(f"[super-mega-hackers] message.mentions: {[user.id for user in message.mentions]}")
-            print(f"[super-mega-hackers] message.role_mentions: {[role.id for role in message.role_mentions]}")
-            print(f"[super-mega-hackers] message.mention_everyone: {message.mention_everyone}")
-            print(f"[super-mega-hackers] message.content: {message.content}")
         """Process messages in the super-mega-hackers channel from a specific user with JSON payloads."""
         if message.channel != self.hackers_channel:
             print(f"[super-mega-hackers] Skipping: message.channel ({getattr(message.channel, 'name', None)}) != hackers_channel ({getattr(self.hackers_channel, 'name', None)})")
@@ -142,26 +137,21 @@ class ScrimBot(commands.Bot):
             print(f"[super-mega-hackers] Skipping: message.author.id ({message.author.id}) != 369367182796390401")
             return
 
-        # Only process if message starts with an @ mention to the configured role
-        role_id = None
-        # Try to get the role id from the channel's guild
-        if message.guild:
-            role = discord.utils.get(message.guild.roles, name=config.BOT_ROLE_NAME)
-            if role:
-                role_id = role.id
-        if not role_id:
-            print(f"[super-mega-hackers] Skipping: could not find role '{config.BOT_ROLE_NAME}' in guild {getattr(message.guild, 'name', None)}")
+        # Only process if message starts with an @ mention to the configured role id
+        allowed_role_id = getattr(config, 'BOT_ROLE_ID', None)
+        if not allowed_role_id:
+            print(f"[super-mega-hackers] Skipping: config.BOT_ROLE_ID not set")
             return
-        print(f"[super-mega-hackers] Found role '{config.BOT_ROLE_NAME}' with id: {role_id}")
-        if not message.content.startswith(f"<@&{role_id}>"):
+        print(f"[super-mega-hackers] Using allowed role id: {allowed_role_id}")
+        if not message.content.startswith(f"<@&{allowed_role_id}>"):
             print(f"[super-mega-hackers] Skipping: message does not start with @ role mention (content: {message.content[:50]})")
             return
 
-        # Extract JSON blob after the @ mention
+        # Extract JSON blob after the @ role mention
         import json
         import re
-        # Remove the @ mention (could be <@id> or <@!id>)
-        content = re.sub(r"^<@!?" + str(self.user.id) + r">\s*", "", message.content)
+        # Remove the @role mention (e.g. <@&ROLE_ID>)
+        content = re.sub(r"^<@&" + str(allowed_role_id) + r">\s*", "", message.content)
         try:
             data = json.loads(content)
         except Exception as e:
@@ -172,14 +162,14 @@ class ScrimBot(commands.Bot):
         from models.leaderboard import LeaderboardData
         recovered = LeaderboardData.from_dict(data)
         if recovered:
-            # self.leaderboard = recovered
+            self.leaderboard = recovered
             # Reinitialize services with recovered data
-            # self.king_manager = KingManager(self.leaderboard)
-            # self.message_processor = MessageProcessor(self.leaderboard, self.king_manager)
+            self.king_manager = KingManager(self.leaderboard)
+            self.message_processor = MessageProcessor(self.leaderboard, self.king_manager)
             print(f"[super-mega-hackers] Updated leaderboard state from JSON: King={self.leaderboard.current_king_id}, Streak={self.leaderboard.current_streak}")
             # Update leaderboard display
-            # if message.guild:
-                # await self.update_leaderboard_message(message.guild)
+            if message.guild:
+                await self.update_leaderboard_message(message.guild)
         else:
             print("[super-mega-hackers] Failed to update leaderboard from JSON")
     

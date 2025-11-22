@@ -6,7 +6,7 @@ import re
 
 # Discord Bot Settings
 ROLE_NAME = "Scrimmer of The Hill"
-BOT_ROLE_NAME = "Scrimmer of The Hill Bot"
+BOT_ROLE_ID = 1432060621393756241
 SCRIMMAGE_CHANNEL = "scrimmage-results"
 HACKERS_CHANNEL = "super-mega-hackers"
 LEADERBOARD_CHANNEL = "scrimmer-of-the-hill"
