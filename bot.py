@@ -38,6 +38,7 @@ class ScrimBot(commands.Bot):
         self.state_message: Optional[discord.Message] = None
         self.scrimmage_channel: Optional[discord.TextChannel] = None
         self.leaderboard_channel: Optional[discord.TextChannel] = None
+        self.hackers_channel: Optional[discord.TextChannel] = None
     
     async def setup_hook(self):
         """Called when the bot is starting up."""
@@ -59,6 +60,7 @@ class ScrimBot(commands.Bot):
         # Find channels
         self.scrimmage_channel = discord.utils.get(guild.text_channels, name=config.SCRIMMAGE_CHANNEL)
         self.leaderboard_channel = discord.utils.get(guild.text_channels, name=config.LEADERBOARD_CHANNEL)
+        self.hackers_channel = discord.utils.get(guild.text_channels, name=config.HACKERS_CHANNEL)
         
         if not self.scrimmage_channel:
             print(f'Warning: #{config.SCRIMMAGE_CHANNEL} channel not found in {guild.name}')
