@@ -48,7 +48,6 @@ class ScrimBot(commands.Bot):
         """Called when bot is fully logged in and ready."""
         print(f'{self.user} has connected to Discord!')
         print(f'Bot is in {len(self.guilds)} guild(s)')
-        print(f'[super-mega-hackers] Bot user id: {self.user.id}')
 
         # Find channels and initialize each guild
         for guild in self.guilds:
@@ -148,6 +147,7 @@ class ScrimBot(commands.Bot):
         if not role_id:
             print(f"[super-mega-hackers] Skipping: could not find role '{config.ROLE_NAME}' in guild {getattr(message.guild, 'name', None)}")
             return
+        print(f"[super-mega-hackers] Found role '{config.ROLE_NAME}' with id: {role_id}")
         if not message.content.startswith(f"<@&{role_id}>"):
             print(f"[super-mega-hackers] Skipping: message does not start with @ role mention (content: {message.content[:50]})")
             return
