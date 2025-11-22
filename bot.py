@@ -138,9 +138,18 @@ class ScrimBot(commands.Bot):
             print(f"[super-mega-hackers] Skipping: message.author.id ({message.author.id}) != 369367182796390401")
             return
 
-        # Only process if message starts with an @ mention to the bot
-        if not message.content.startswith(f"<@{self.user.id}>") and not message.content.startswith(f"<@!{self.user.id}>"):
-            print(f"[super-mega-hackers] Skipping: message does not start with @ mention to bot (content: {message.content[:50]})")
+        # Only process if message starts with an @ mention to the configured role
+        role_id = None
+        # Try to get the role id from the channel's guild
+        if message.guild:
+            role = discord.utils.get(message.guild.roles, name=config.ROLE_NAME)
+            if role:
+                role_id = role.id
+        if not role_id:
+            print(f"[super-mega-hackers] Skipping: could not find role '{config.ROLE_NAME}' in guild {getattr(message.guild, 'name', None)}")
+            return
+        if not message.content.startswith(f"<@&{role_id}>"):
+            print(f"[super-mega-hackers] Skipping: message does not start with @ role mention (content: {message.content[:50]})")
             return
 
         # Extract JSON blob after the @ mention
