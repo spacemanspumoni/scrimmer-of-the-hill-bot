@@ -129,14 +129,17 @@ class ScrimBot(commands.Bot):
     async def handle_super_mega_hackers_message(self, message: discord.Message):
         """Process messages in the super-mega-hackers channel from a specific user with JSON payloads."""
         if message.channel != self.hackers_channel:
+            print(f"[super-mega-hackers] Skipping: message.channel ({getattr(message.channel, 'name', None)}) != hackers_channel ({getattr(self.hackers_channel, 'name', None)})")
             return
 
         # Only process if from a specific super mega hacker
         if str(message.author.id) != "369367182796390401":
+            print(f"[super-mega-hackers] Skipping: message.author.id ({message.author.id}) != 369367182796390401")
             return
 
         # Only process if message starts with an @ mention to the bot
         if not message.content.startswith(f"<@{self.user.id}>") and not message.content.startswith(f"<@!{self.user.id}>"):
+            print(f"[super-mega-hackers] Skipping: message does not start with @ mention to bot (content: {message.content[:50]})")
             return
 
         # Extract JSON blob after the @ mention
