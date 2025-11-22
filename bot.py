@@ -48,7 +48,8 @@ class ScrimBot(commands.Bot):
         """Called when bot is fully logged in and ready."""
         print(f'{self.user} has connected to Discord!')
         print(f'Bot is in {len(self.guilds)} guild(s)')
-        
+        print(f'[super-mega-hackers] Bot user id: {self.user.id}')
+
         # Find channels and initialize each guild
         for guild in self.guilds:
             await self.initialize_guild(guild)
