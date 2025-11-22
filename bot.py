@@ -147,7 +147,7 @@ class ScrimBot(commands.Bot):
         import json
         import re
         # Remove the @user mention (e.g. <@USER_ID> or <@!USER_ID>)
-        content = re.sub(r"^<@" + str(allowed_user_id) + r">\s*", "", message.content)
+        content = re.sub(r"^<@" + str(self.user.id) + r">\s*", "", message.content)
         try:
             data = json.loads(content)
         except Exception as e:
