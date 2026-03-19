@@ -43,6 +43,26 @@ class KingManager:
         
         return member
     
+    async def _ensure_only_one_king(self, role: discord.Role, king: discord.Member) -> None:
+        """Ensure only the given king has the king role.
+
+        This helps recover from cases where the role may have been assigned
+        manually or left behind on other members.
+        """
+        for member in list(role.members):
+            if member.id == king.id:
+                continue
+            try:
+                await member.remove_roles(
+                    role,
+                    reason="Assigning new king; ensuring only one member has the king role"
+                )
+                print(f'Removed king role from {member.name} to ensure only one king has the role')
+            except discord.Forbidden:
+                print('Error: Bot lacks permission to remove king role from other members')
+            except Exception as e:
+                print(f'Error removing king role from {member.name}: {e}')
+
     async def process_game_result(
         self,
         guild: discord.Guild,
@@ -89,6 +109,7 @@ class KingManager:
         # Case 1: No king exists
         if not current_king:
             print(f'No king exists, crowning {winner.name} with ego {winner_ego}')
+            await self._ensure_only_one_king(role, winner)
             await winner.add_roles(role, reason="Won game, became king")
             self.leaderboard.set_king(winner.id, ego=winner_ego, streak=1)
             self.leaderboard.last_activity = timestamp
@@ -111,6 +132,7 @@ class KingManager:
         elif loser == current_king:
             print(f'{winner.name} defeated king {loser.name}, new king ego: {winner_ego}')
             await loser.remove_roles(role, reason="Lost game as king")
+            await self._ensure_only_one_king(role, winner)
             await winner.add_roles(role, reason="Defeated the king")
             
             # Before resetting, check if the old king achieved a new best
