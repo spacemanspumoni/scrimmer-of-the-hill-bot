@@ -165,6 +165,13 @@ class ScrimBot(commands.Bot):
             print(f"[super-mega-hackers] Updated leaderboard state from JSON: King={self.leaderboard.current_king_id}, Streak={self.leaderboard.current_streak}")
             # Update leaderboard display
             if message.guild:
+                # Ensure only one member has the king role
+                if self.leaderboard.current_king_id:
+                    king_member = message.guild.get_member(self.leaderboard.current_king_id)
+                    king_role = await self.king_manager.get_king_role(message.guild)
+                    if king_member and king_role:
+                        await self.king_manager._ensure_only_one_king(king_role, king_member)
+                
                 await self.update_leaderboard_message(message.guild)
         else:
             print("[super-mega-hackers] Failed to update leaderboard from JSON")
