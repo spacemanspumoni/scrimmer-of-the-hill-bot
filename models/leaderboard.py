@@ -19,8 +19,8 @@ class LeaderboardData:
         self.current_streak: int = 0
         self.current_king_ego_floor: Optional[int] = None  # ego floor for current king's active streak
         self.last_activity: Optional[datetime] = None
-        self.processed_messages: Dict[int, str] = {}  # message_id -> content_hash
-        self.processed_results: Dict[str, int] = {}  # result_key (msg_id:p1:p2:ts) -> winner_id
+        self.processed_messages: Dict[int, str] = {}  # message_id -> content_hash, runtime-only cache
+        self.processed_results: Dict[str, int] = {}  # result_key (msg_id:p1:p2:ts) -> winner_id, runtime-only cache
     
     def update_best_streak(self, user_id: int, streak: int, ego_floor: int) -> None:
         """Update a player's best streak if the new streak is higher."""
@@ -70,12 +70,16 @@ class LeaderboardData:
         return self.processed_messages.get(message_id) == content_hash
     
     def clear_tracking(self) -> None:
-        """Clear all message and result tracking (used during recalculation)."""
+        """Clear all runtime-only message and result tracking."""
         self.processed_messages.clear()
         self.processed_results.clear()
     
     def to_dict(self) -> dict:
-        """Serialize to dictionary for JSON storage."""
+        """Serialize to dictionary for JSON storage.
+
+        Runtime-only tracking caches are excluded so state stays small and
+        recoverable without carrying processing history.
+        """
         return {
             'best_streaks': {str(k): v for k, v in self.best_streaks.items()},
             'best_streak_egos': {str(k): v for k, v in self.best_streak_egos.items()},
@@ -83,8 +87,6 @@ class LeaderboardData:
             'current_streak': self.current_streak,
             'current_king_ego_floor': self.current_king_ego_floor,
             'last_activity': self.last_activity.isoformat() if self.last_activity else None,
-            'processed_messages': {str(k): v for k, v in self.processed_messages.items()},
-            'processed_results': {k: v for k, v in self.processed_results.items()}
         }
     
     @classmethod
@@ -96,8 +98,6 @@ class LeaderboardData:
         leaderboard.current_king_id = data.get('current_king_id')
         leaderboard.current_streak = data.get('current_streak', 0)
         leaderboard.current_king_ego_floor = data.get('current_king_ego_floor')
-        leaderboard.processed_messages = {int(k): v for k, v in data.get('processed_messages', {}).items()}
-        leaderboard.processed_results = {k: int(v) for k, v in data.get('processed_results', {}).items()}
         
         last_activity_str = data.get('last_activity')
         if last_activity_str:

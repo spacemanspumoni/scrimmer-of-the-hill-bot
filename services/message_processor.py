@@ -74,10 +74,15 @@ class MessageProcessor:
         Returns:
             True if message was processed, False if skipped
         """
+        # Skip if message already has the bot's processed checkmark reaction.
+        if any(reaction.emoji == '✅' and reaction.me for reaction in message.reactions):
+            print(f'Message {message.id} already processed by reaction, skipping')
+            return False
+
         # Calculate content hash
         content_hash = self.calculate_content_hash(message.content)
         
-        # Check if already processed with same content
+        # Check if already processed with same content in runtime cache
         if self.leaderboard.is_message_unchanged(message.id, content_hash):
             print(f'Message {message.id} already processed with same content, skipping')
             return False
@@ -173,7 +178,7 @@ class MessageProcessor:
                     for game in games:
                         await self.process_single_result(msg, game, guild)
                     
-                    # Mark as processed
+                    # Mark as processed in runtime cache only
                     content_hash = self.calculate_content_hash(msg.content)
                     self.leaderboard.mark_message_processed(msg.id, content_hash)
             
@@ -226,13 +231,13 @@ class MessageProcessor:
             for key in keys_to_remove:
                 del self.leaderboard.processed_results[key]
             
-            # Remove old messages
+            # Remove old message tracking cache entries
             messages_to_remove = set(self.leaderboard.processed_messages.keys()) - recent_message_ids
             for msg_id in messages_to_remove:
                 del self.leaderboard.processed_messages[msg_id]
             
             if keys_to_remove or messages_to_remove:
-                print(f'Cleaned up {len(keys_to_remove)} old results and {len(messages_to_remove)} old messages')
+                print(f'Cleaned up {len(keys_to_remove)} old results and {len(messages_to_remove)} old message cache entries')
         
         except discord.Forbidden:
             print('Error: Bot lacks permission to read message history for cleanup')

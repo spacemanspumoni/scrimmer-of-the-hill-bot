@@ -209,10 +209,11 @@ class ScrimBot(commands.Bot):
         if not games:
             return
         
-        # Only recalculate if message was recent enough to matter
-        # Check if the deleted message was tracked (implies it was recent)
-        if message.id in self.leaderboard.processed_messages:
-            print(f'Recent message with results deleted, recalculating...')
+        # Only recalculate if the deleted message was tracked or marked as processed
+        if message.id in self.leaderboard.processed_messages or any(
+            reaction.emoji == '✅' and reaction.me for reaction in message.reactions
+        ):
+            print(f'Recent processed message deleted, recalculating...')
             await self.message_processor.recalculate_from_recent(
                 message.guild, 
                 message.channel
