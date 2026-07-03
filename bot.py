@@ -129,7 +129,6 @@ class ScrimBot(commands.Bot):
     async def handle_super_mega_hackers_message(self, message: discord.Message):
         """Process messages in the super-mega-hackers channel from a specific user with JSON payloads."""
         if message.channel != self.hackers_channel:
-            print(f"[super-mega-hackers] Skipping: message.channel ({getattr(message.channel, 'name', None)}) != hackers_channel ({getattr(self.hackers_channel, 'name', None)})")
             return
 
         # Only process if from a specific super mega hacker
