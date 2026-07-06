@@ -74,11 +74,6 @@ class MessageProcessor:
         Returns:
             True if message was processed, False if skipped
         """
-        # Skip if message already has the bot's processed checkmark reaction.
-        if any(reaction.emoji == '✅' and reaction.me for reaction in message.reactions):
-            print(f'Message {message.id} already processed by reaction, skipping')
-            return False
-
         # Calculate content hash
         content_hash = self.calculate_content_hash(message.content)
         
